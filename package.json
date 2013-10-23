@@ -1,0 +1,35 @@
+{
+  "name": "dynamodb-model",
+  "version": "0.0.1",
+  "author": {
+    "name": "Nicolas Mercier",
+    "email": "nicolas@extrabacon.net"
+  },
+  "description": "Elegant DynamoDB object modeling influenced from MongoDB and the Mongoose API",
+  "keywords": [
+    "dynamo",
+    "dynamodb",
+    "aws",
+    "orm",
+    "mapping"
+  ],
+  "dependencies": {
+    "aws-sdk": "~1.9.0"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "chai": "*"
+  },
+  "scripts": {
+    "test": "mocha -R spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/extrabacon/dynamodb-model"
+  },
+  "homepage": "http://github.com/extrabacon/dynamodb-model",
+  "bugs": "http://github.com/extrabacon/dynamodb-model/issues",
+  "engines": {
+    "node": ">=0.10"
+  }
+}
