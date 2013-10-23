@@ -31,8 +31,6 @@ npm test
 
 A schema describes attributes, keys, and indexes for a DynamoDB table. A schema instance allows mapping of Javascript objects to DynamoDB items and vice-versa.
 
-Example:
-
 ```javascript
 var DynamoDBModel = require('dynamodb-model');
 
@@ -62,20 +60,24 @@ Schemas support the following data types native to DynamoDB:
 In addition, schemas also support the following data types with some transformations:
 
 * Boolean (as a "Y" or "N" string)
-* Date (using Date.getTime as a number)
-* JSON or objects (using JSON.stringify and JSON.parse), using an empty object: {}
+* Date (via `Date.getTime` as a number)
+* JSON or objects (via `JSON.stringify` and `JSON.parse`), defined using an empty object `{}`
 
 It is also possible to implement you own mapping if necessary:
 
 ```javascript
 var DynamoDBModel = require('dynamodb-model');
 
-var schema = new DynamoDBModel.Schema('my-dynamodb-table', {
-  ...
+var schema = new DynamoDBModel.Schema({
+  /* some fields... */
   customField: {
-    dynamoDbType: 'S',
-    mapFromDb: function(value) { /* your implementation */ },
-    mapToDb: function(value) { /* your implementation */ }
+    dynamoDbType: 'S', // the native DynamoDB type, either S, N, B, SS, NS or BS
+    mapFromDb: function(value) {
+      /* your implementation */
+    },
+    mapToDb: function(value) {
+      /* your implementation */
+    }
   }
 });
 ```
@@ -84,8 +86,8 @@ var schema = new DynamoDBModel.Schema('my-dynamodb-table', {
 
 To specify a Hash or Range key, define a `key` attribute on the field.
 
-* Set to `true` or `"hash"` to specify a Hash key
-* Set to `"range"` to specify a Range key
+* Set to `true` or `"hash"` to specify a **Hash** key
+* Set to `"range"` to specify a **Range** key
 
 #### Local Secondary Indexes
 
@@ -93,9 +95,7 @@ Local secondary indexes are not yet supported.
 
 #### Default values
 
-The specify a default value, define a `default` attribute on the field. Defaults can be a static value or a function returning a value.
-
-Example:
+The specify a default value, use `default` to specify a static value or a function returning a value.
 
 ```javascript
 var DynamoDBModel = require('dynamodb-model');
@@ -114,8 +114,6 @@ Default values replace missing attributes when reading items from DynamoDB.
 #### Mapping objects manually
 
 Schemas are independent from the AWS SDK and can be used with any other DynamoDB client. To map an object to a DynamoDB structure manually, use `schema.mapToDb`. Likewise, to map a DynamoDB structure to an object, use `schema.mapFromDb`.
-
-Example:
 
 ```javascript
 var DynamoDBModel = require('dynamodb-model');
@@ -137,9 +135,7 @@ schema.mapFromDb({ id: { N: '1' }, message: { 'S': 'some text' } });
 
 ### Using a model to interact with a DynamoDB table
 
-Using a model allows you to interact with a DynamoDB table represented by a `Schema`.
-
-Example:
+The `Model` class provides the high-level API you use to interact with the table, such as reading and writing data. The model class uses the official AWS SDK which already implement most of the best practices, such as automatic retries on a "HTTP 400: Capacity Exceeded" error.
 
 ```javascript
 var DynamoDBModel = require('dynamodb-model');
@@ -155,15 +151,16 @@ var productSchema = new DynamoDBModel.Schema({
   created: Date
 });
 
-// create a model using the name of the DynamoDB table and the schema to use
+// create a model using the name of the DynamoDB table and a schema
 var productTable = new DynamoDBModel.Model('dynamo-products', productSchema);
 
-// use the model instance provides a high-level API
+// the model provides methods for all DynamoDB operations
 productTable.putItem(/* ... */);
 productTable.getItem(/* ... */);
 productTable.updateItem(/* ... */);
 productTable.deleteItem(/* ... */);
 
+// but some of them return intermediate objects in order to provide a better API
 var query = productTable.query(/* ... */);
 query.select(/* ... */).limit(100).exec(callback);
 ```
@@ -191,7 +188,7 @@ AWS.config.apiVersions = {
 Additionally, if you need to specify options for the `AWS.DynamoDB` constructor, pass them to the `Model` constructor like this:
 
 ```javascript
-var mytable = new DynamoDBModel.Model(tableName, schema, {
+var myTable = new DynamoDBModel.Model(tableName, schema, {
   maxRetries: 1000,
   sslEnabled: true
 });
@@ -212,8 +209,8 @@ This method is not yet implemented.
 Creates the DynamoDB table represented by the schema and returns the AWS service response.
 
 ```javascript
-var mytable = new DynamoDBModel.Model(tableName, schema);
-mytable.createTable(function (err, response) {
+var myTable = new DynamoDBModel.Model(tableName, schema);
+myTable.createTable(function (err, response) {
   // table creation started
 })
 ```
@@ -225,13 +222,13 @@ mytable.createTable(function (err, response) {
 Deletes a single item in a table by primary key and returns the AWS service response.
 
 ```javascript
-var mytable = new DynamoDBModel.Model(tableName, schema);
-mytable.deleteItem({ id: 1 }, function (err, response) {
+var myTable = new DynamoDBModel.Model(tableName, schema);
+myTable.deleteItem({ id: 1 }, function (err, response) {
   // item removed
 })
 ```
 
-[AWS Documentation for Deleteitem](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Deleteitem.html)
+[AWS Documentation for DeleteItem](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DeleteItem.html)
 
 Note: conditional deletes are not yet implemented.
 
@@ -240,8 +237,8 @@ Note: conditional deletes are not yet implemented.
 Removes the table represented by the schema, as well as all items in the table, then returns the AWS service response.
 
 ```javascript
-var mytable = new DynamoDBModel.Model(tableName, schema);
-mytable.deleteTable(function (err, response) {
+var myTable = new DynamoDBModel.Model(tableName, schema);
+myTable.deleteTable(function (err, response) {
   // table removal started
 })
 ```
@@ -253,8 +250,8 @@ mytable.deleteTable(function (err, response) {
 Returns information about the table represented by the schema, including the current status of the table, when it was created, the primary key schema, and any indexes on the table. The table description is the AWS service response.
 
 ```javascript
-var mytable = new DynamoDBModel.Model(tableName, schema);
-mytable.describeTable(function (err, response) {
+var myTable = new DynamoDBModel.Model(tableName, schema);
+myTable.describeTable(function (err, response) {
   // response contains the table description, see AWS docs for more details
 })
 ```
@@ -266,8 +263,8 @@ mytable.describeTable(function (err, response) {
 Retrieves a specific item based on its primary key, returning the mapped item as well as the AWS service response.
 
 ```javascript
-var mytable = new DynamoDBModel.Model(tableName, schema);
-mytable.getItem({ id: 1 }, function (err, item, response) {
+var myTable = new DynamoDBModel.Model(tableName, schema);
+myTable.getItem({ id: 1 }, function (err, item, response) {
   // item represents the DynamoDB item mapped to an object using the schema
 })
 ```
