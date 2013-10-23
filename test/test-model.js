@@ -7,7 +7,7 @@ var expect = chai.expect;
 describe('DynamoModel', function () {
 
     // a sample schema for all our tests
-    var schema = new DynamoSchema('my-table', {
+    var schema = new DynamoSchema({
         id: {
             type: String,
             key: true
@@ -24,7 +24,7 @@ describe('DynamoModel', function () {
 
         describe('GetItem', function () {
             it('should provide required parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.getItem = function (params, callback) {
                     expect(params).to.have.property('TableName', 'my-table');
                     expect(params).to.have.property('Key');
@@ -34,14 +34,14 @@ describe('DynamoModel', function () {
                 model.getItem({ id: 'test' });
             });
             it('should allow custom parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.getItem = function (params, callback) {
                     expect(params).to.have.property('CustomParameter', 'value');
                 };
                 model.getItem({ id: 'test' }, { CustomParameter: 'value' });
             });
             it('should map resulting item', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.getItem = function (params, callback) {
                     callback(null, {
                         Item: schema.mapToDb({ id: 'test', range: 1 })
@@ -53,7 +53,7 @@ describe('DynamoModel', function () {
                 });
             });
             it('should throw if missing key', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 expect(function () {
                     model.getItem();
                 }).to.throw('key is required');
@@ -62,7 +62,7 @@ describe('DynamoModel', function () {
 
         describe('PutItem', function () {
             it('should provide required parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.putItem = function (params, callback) {
                     expect(params).to.have.property('TableName', 'my-table');
                     expect(params).to.have.property('Item');
@@ -72,14 +72,14 @@ describe('DynamoModel', function () {
                 model.putItem({ id: 'test' });
             });
             it('should allow custom parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.putItem = function (params, callback) {
                     expect(params).to.have.property('CustomParameter', 'value');
                 };
                 model.putItem({ id: 'test' }, { CustomParameter: 'value' });
             });
             it('should throw if missing item', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 expect(function () {
                     model.putItem();
                 }).to.throw('item is required');
@@ -88,7 +88,7 @@ describe('DynamoModel', function () {
 
         describe('UpdateItem', function () {
             it('should provide required parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.updateItem = function (params, callback) {
                     expect(params).to.have.property('TableName', 'my-table');
                     expect(params).to.have.property('Key');
@@ -105,20 +105,20 @@ describe('DynamoModel', function () {
                 model.updateItem({ id: 'test', range: 1 }, { attribute1: 'abc' });
             });
             it('should allow custom parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.updateItem = function (params, callback) {
                     expect(params).to.have.property('CustomParameter', 'value');
                 };
                 model.updateItem({}, {}, { CustomParameter: 'value' });
             });
             it('should throw if missing key', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 expect(function () {
                     model.updateItem();
                 }).to.throw('key is required');
             });
             it('should throw if missing updates', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 expect(function () {
                     model.updateItem({});
                 }).to.throw('updates is required');
@@ -127,7 +127,7 @@ describe('DynamoModel', function () {
 
         describe('DeleteItem', function () {
             it('should provide required parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.deleteItem = function (params, callback) {
                     expect(params).to.have.property('TableName', 'my-table');
                     expect(params).to.have.property('Key');
@@ -137,14 +137,14 @@ describe('DynamoModel', function () {
                 model.deleteItem({ id: 'test', range: 1 }, { attribute1: 'abc' });
             });
             it('should allow custom parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.deleteItem = function (params, callback) {
                     expect(params).to.have.property('CustomParameter', 'value');
                 };
                 model.deleteItem({}, { CustomParameter: 'value' });
             });
             it('should throw if missing key', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 expect(function () {
                     model.deleteItem();
                 }).to.throw('key is required');
@@ -153,7 +153,7 @@ describe('DynamoModel', function () {
 
         describe('Query', function () {
             it('should provide required parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.query = function (params, callback) {
                     expect(params).to.have.property('TableName', 'my-table');
                     expect(params).to.have.property('KeyConditions');
@@ -163,20 +163,20 @@ describe('DynamoModel', function () {
                 model.query({ id: 'test', range: 1 });
             });
             it('should allow custom parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.query = function (params, callback) {
                     expect(params).to.have.property('CustomParameter', 'value');
                 };
                 model.query({}, { CustomParameter: 'value' });
             });
             it('should throw if missing key', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 expect(function () {
                     model.query();
                 }).to.throw('key is required');
             });
             it('should return a Query instance', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 var query = model.query({ id: 'test', range: 1 });
                 expect(query).to.be.an.instanceOf(DynamoQuery);
             });
@@ -184,7 +184,7 @@ describe('DynamoModel', function () {
 
         describe('Scan', function () {
             it('should provide required parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.scan = function (params, callback) {
                     expect(params).to.have.property('TableName', 'my-table');
                     expect(params).to.have.property('KeyConditions');
@@ -194,7 +194,7 @@ describe('DynamoModel', function () {
                 model.scan({ id: 'test', range: 1 }, { attribute1: 'abc' });
             });
             it('should allow custom parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.scan = function (params, callback) {
                     expect(params).to.have.property('CustomParameter', 'value');
                 };
@@ -204,7 +204,7 @@ describe('DynamoModel', function () {
 
         describe('DescribeTable', function () {
             it('should provide required parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.describeTable = function (params, callback) {
                     expect(params).to.have.property('TableName', 'my-table');
                 };
@@ -214,7 +214,7 @@ describe('DynamoModel', function () {
 
         describe('CreateTable', function () {
             it('should provide required parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.createTable = function (params, callback) {
                     expect(params).to.have.property('TableName', 'my-table');
                     expect(params).to.have.property('KeySchema');
@@ -238,14 +238,14 @@ describe('DynamoModel', function () {
                 model.createTable();
             });
             it('should allow custom parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.createTable = function (params, callback) {
                     expect(params).to.have.property('CustomParameter', 'value');
                 };
                 model.createTable({ CustomParameter: 'value' });
             });
             it('should honor model.defaultThroughput ', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.defaultThroughput = { ReadCapacityUnits: 999, WriteCapacityUnits: 999 };
                 model.dynamodb.createTable = function (params, callback) {
                     expect(params.ProvisionedThroughput).to.have.property('ReadCapacityUnits', 999);
@@ -257,7 +257,7 @@ describe('DynamoModel', function () {
 
         describe('UpdateTable', function () {
             it('should provide required parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.updateTable = function (params, callback) {
                     expect(params).to.have.property('TableName', 'my-table');
                     expect(params).to.have.property('ProvisionedThroughput');
@@ -265,7 +265,7 @@ describe('DynamoModel', function () {
                 model.updateTable();
             });
             it('should allow custom parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.updateTable = function (params, callback) {
                     expect(params).to.have.property('CustomParameter', 'value');
                 };
@@ -275,14 +275,14 @@ describe('DynamoModel', function () {
 
         describe('DeleteTable', function () {
             it('should provide required parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.deleteTable = function (params, callback) {
                     expect(params).to.have.property('TableName', 'my-table');
                 };
                 model.deleteTable();
             });
             it('should allow custom parameters', function () {
-                var model = new DynamoModel(schema);
+                var model = new DynamoModel('my-table', schema);
                 model.dynamodb.deleteTable = function (params, callback) {
                     expect(params).to.have.property('CustomParameter', 'value');
                 };
@@ -293,7 +293,7 @@ describe('DynamoModel', function () {
     });
 
     describe('Update operators', function () {
-        var model = new DynamoModel(schema);
+        var model = new DynamoModel('my-table', schema);
         it('should map plain values to the PUT operator', function () {
             var updates = model.parseUpdates({ attribute1: 'value'});
             expect(updates).to.have.property('attribute1');
@@ -323,7 +323,7 @@ describe('DynamoModel', function () {
     });
 
     describe('Conditional operators', function () {
-        var model = new DynamoModel(schema);
+        var model = new DynamoModel('my-table', schema);
         it('should map plain values to the EQ operator', function () {
             var conditions = model.parseConditions({ id: 'abc'});
             expect(conditions).to.have.property('id');

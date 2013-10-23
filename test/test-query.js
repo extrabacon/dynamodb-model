@@ -6,7 +6,7 @@ var expect = chai.expect;
 describe('DynamoQuery', function () {
 
     // a sample schema for all our tests
-    var schema = new DynamoSchema('my-table', {
+    var schema = new DynamoSchema({
         id: {
             type: String,
             key: true
@@ -20,7 +20,7 @@ describe('DynamoQuery', function () {
     });
 
     it('should execute with "exec"', function () {
-        var model = new DynamoModel(schema);
+        var model = new DynamoModel('my-table', schema);
         model.dynamodb.query = function (params, callback) {
             expect(params).to.have.property('TableName', 'my-table');
             expect(params).to.have.property('KeyConditions');
@@ -30,7 +30,7 @@ describe('DynamoQuery', function () {
     });
 
     it('should allow the selection of fields to return with "select"', function () {
-        var model = new DynamoModel(schema);
+        var model = new DynamoModel('my-table', schema);
         model.dynamodb.query = function (params, callback) {
             expect(params).to.have.property('Select', 'SPECIFIC_ATTRIBUTES');
             expect(params).to.have.property('AttributesToGet');
@@ -44,7 +44,7 @@ describe('DynamoQuery', function () {
     });
 
     it('should return the consumed capacity with "returnConsumedCapacity"', function () {
-        var model = new DynamoModel(schema);
+        var model = new DynamoModel('my-table', schema);
         model.dynamodb.query = function (params, callback) {
             expect(params).to.have.property('ReturnConsumedCapacity', true);
         };
@@ -53,7 +53,7 @@ describe('DynamoQuery', function () {
     });
 
     it('should limit the number of items with "limit"', function () {
-        var model = new DynamoModel(schema);
+        var model = new DynamoModel('my-table', schema);
         model.dynamodb.query = function (params, callback) {
             expect(params).to.have.property('Limit', 10);
         };
@@ -62,7 +62,7 @@ describe('DynamoQuery', function () {
     });
 
     it('should count number of items with "count"', function () {
-        var model = new DynamoModel(schema);
+        var model = new DynamoModel('my-table', schema);
         model.dynamodb.query = function (params, callback) {
             expect(params).to.have.property('Select', 'COUNT');
         };
@@ -71,7 +71,7 @@ describe('DynamoQuery', function () {
     });
 
     it('should allow paging with "next"', function () {
-        var model = new DynamoModel(schema);
+        var model = new DynamoModel('my-table', schema);
         var count = 0;
         model.dynamodb.query = function (params, callback) {
             // simulate 3 pages of data

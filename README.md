@@ -6,7 +6,7 @@ A simple and lightweight object mapper for Amazon DynamoDB, influenced by MongoD
 
 + Support for the full DynamoDB feature set
 + Models use the official AWS SDK module
-+ Independant schemas free of dependencies
++ Independent schemas, free of dependencies
 + Transparent support for MongoDB operators, such as "$gt", "$set" or "$inc"
 + API conventions based on [Mongoose](https://github.com/LearnBoost/mongoose)
 + Good documentation
@@ -29,14 +29,14 @@ npm test
 
 ### Defining a schema to describe a DynamoDB table
 
-Schemas describe attributes, keys, and indexes for a table. A schema instance allows mapping of Javascript objects to DynamoDB items and vice-versa.
+A schema describes attributes, keys, and indexes for a DynamoDB table. A schema instance allows mapping of Javascript objects to DynamoDB items and vice-versa.
 
 Example:
 
 ```javascript
 var DynamoDBModel = require('dynamodb-model');
 
-var productSchema = new DynamoDBModel.Schema('my-dynamodb-table', {
+var productSchema = new DynamoDBModel.Schema({
   productId: {
     type: Number,
     key: true       // indicates a Hash key
@@ -85,7 +85,7 @@ var schema = new DynamoDBModel.Schema('my-dynamodb-table', {
 To specify a Hash or Range key, define a `key` attribute on the field.
 
 * Set to `true` or `"hash"` to specify a Hash key
-* Set to `"range"` to sepcify a Range key
+* Set to `"range"` to specify a Range key
 
 #### Local Secondary Indexes
 
@@ -100,7 +100,7 @@ Example:
 ```javascript
 var DynamoDBModel = require('dynamodb-model');
 
-var schema = new DynamoDBModel.Schema('my-dynamodb-table', {
+var schema = new DynamoDBModel.Schema({
   ...
   active: {
     type: Boolean,
@@ -113,7 +113,7 @@ Default values replace missing attributes when reading items from DynamoDB.
 
 #### Mapping objects manually
 
-Schemas are independant from the AWS SDK and can be used with any other DynamoDB client. To map an object to a DynamoDB structure manually, use `schema.mapToDb`. Likewise, to map a DynamoDB structure to an object, use `schema.mapFromDb`.
+Schemas are independent from the AWS SDK and can be used with any other DynamoDB client. To map an object to a DynamoDB structure manually, use `schema.mapToDb`. Likewise, to map a DynamoDB structure to an object, use `schema.mapFromDb`.
 
 Example:
 
@@ -144,23 +144,28 @@ Example:
 ```javascript
 var DynamoDBModel = require('dynamodb-model');
 
-var productSchema = new DynamoDBModel.Schema('my-dynamodb-table', {
+var productSchema = new DynamoDBModel.Schema({
   productId: {
     type: Number,
-    key: true       // indicates a Hash key
+    key: true
   },
   sku: String,
-  inStock: Boolean, // will be stored as a "Y" or "N" string
-  properties: {},   // will be converted to a JSON string
-  created: Date     // will be converted to a number with Date.getTime
+  inStock: Boolean,
+  properties: {},
+  created: Date
 });
 
-var productTable = new DynamoDBModel.Model(productSchema);
+// create a model using the name of the DynamoDB table and the schema to use
+var productTable = new DynamoDBModel.Model('dynamo-products', productSchema);
 
+// use the model instance provides a high-level API
 productTable.putItem(/* ... */);
 productTable.getItem(/* ... */);
 productTable.updateItem(/* ... */);
 productTable.deleteItem(/* ... */);
+
+var query = productTable.query(/* ... */);
+query.select(/* ... */).limit(100).exec(callback);
 ```
 
 #### About AWS connectivity and credentials
@@ -186,7 +191,7 @@ AWS.config.apiVersions = {
 Additionally, if you need to specify options for the `AWS.DynamoDB` constructor, pass them to the `Model` constructor like this:
 
 ```javascript
-var mytable = new DynamoDBModel.Model(schema, {
+var mytable = new DynamoDBModel.Model(tableName, schema, {
   maxRetries: 1000,
   sslEnabled: true
 });
@@ -207,7 +212,7 @@ This method is not yet implemented.
 Creates the DynamoDB table represented by the schema and returns the AWS service response.
 
 ```javascript
-var mytable = new DynamoDBModel.Model(schema);
+var mytable = new DynamoDBModel.Model(tableName, schema);
 mytable.createTable(function (err, response) {
   // table creation started
 })
@@ -220,7 +225,7 @@ mytable.createTable(function (err, response) {
 Deletes a single item in a table by primary key and returns the AWS service response.
 
 ```javascript
-var mytable = new DynamoDBModel.Model(schema);
+var mytable = new DynamoDBModel.Model(tableName, schema);
 mytable.deleteItem({ id: 1 }, function (err, response) {
   // item removed
 })
@@ -235,7 +240,7 @@ Note: conditional deletes are not yet implemented.
 Removes the table represented by the schema, as well as all items in the table, then returns the AWS service response.
 
 ```javascript
-var mytable = new DynamoDBModel.Model(schema);
+var mytable = new DynamoDBModel.Model(tableName, schema);
 mytable.deleteTable(function (err, response) {
   // table removal started
 })
@@ -248,7 +253,7 @@ mytable.deleteTable(function (err, response) {
 Returns information about the table represented by the schema, including the current status of the table, when it was created, the primary key schema, and any indexes on the table. The table description is the AWS service response.
 
 ```javascript
-var mytable = new DynamoDBModel.Model(schema);
+var mytable = new DynamoDBModel.Model(tableName, schema);
 mytable.describeTable(function (err, response) {
   // response contains the table description, see AWS docs for more details
 })
@@ -261,7 +266,7 @@ mytable.describeTable(function (err, response) {
 Retrieves a specific item based on its primary key, returning the mapped item as well as the AWS service response.
 
 ```javascript
-var mytable = new DynamoDBModel.Model(schema);
+var mytable = new DynamoDBModel.Model(tableName, schema);
 mytable.getItem({ id: 1 }, function (err, item, response) {
   // item represents the DynamoDB item mapped to an object using the schema
 })
@@ -314,7 +319,7 @@ This is the initial release of `dynamodb-model` and should not be considered pro
 * Implement `BatchGetItem` operation
 * Implement `BatchWriteItem` operation
 * Add conditional support for `DeleteItem` operation
-* Add parallel suport to `Scan` operation
+* Add parallel support for `Scan` operation
 * Improve API to be closer to Mongoose, using aliases for common methods
 
 ## Changelog
