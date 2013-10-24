@@ -227,10 +227,6 @@ Creates the DynamoDB table represented by the schema and returns the AWS service
 + options: attributes to add to the AWS.Request instance (optional)
 + callback: the callback function to invoke with the AWS response (optional)
 
-Callback arguments:
-+ err: the error, if any
-+ response: the AWS service response
-
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
 myTable.createTable(function (err, response) {
@@ -238,7 +234,7 @@ myTable.createTable(function (err, response) {
 })
 ```
 
-Note: table creation in DynamoDB are asynchronous. The table is not ready until its status property is set to "ACTIVE". If you need to wait for the table to become active, use the `waitForActiveTable` method.
+Note: table creation in DynamoDB is asynchronous. The table is not ready until its status property is set to "ACTIVE". If you need to wait for the table to become active, use the `waitForActiveTable` method.
 
 [AWS Documentation for CreateTable](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html)
 
@@ -249,10 +245,6 @@ Deletes a single item in a table by primary key and returns the AWS service resp
 + key: an object representing the primary key of the item to remove
 + options: attributes to add to the AWS.Request instance (optional)
 + callback: the callback function to invoke with the AWS response (optional)
-
-Callback arguments:
-+ err: the error, if any
-+ response: the AWS service response
 
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
@@ -272,10 +264,6 @@ Removes the table represented by the schema, as well as all items in the table, 
 + options: attributes to add to the AWS.Request instance (optional)
 + callback: the callback function to invoke with the AWS response
 
-Callback arguments:
-+ err: the error, if any
-+ response: the AWS service response
-
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
 myTable.deleteTable(function (err, response) {
@@ -292,10 +280,6 @@ Returns information about the table represented by the schema, including the cur
 + options: attributes to add to the AWS.Request instance (optional)
 + callback: the callback function to invoke with the AWS response
 
-Callback arguments:
-+ err: the error, if any
-+ response: the AWS service response
-
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
 myTable.describeTable(function (err, response) {
@@ -309,10 +293,6 @@ Invokes `describeTable` repeatedly until the table status is `"ACTIVE"`.
 
 + pollingInterval: the delay in milliseconds between each invocation of `describeTable` (optional, default value is 3000)
 + callback: the callback function to invoke with the AWS response from `describeTable` (optional)
-
-Callback arguments:
-+ err: the error, if any
-+ response: the AWS service response
 
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
@@ -330,11 +310,6 @@ Retrieves a specific item based on its primary key, returning the mapped item as
 + options: attributes to add to the AWS.Request instance (optional)
 + callback: the callback function to invoke with the AWS response
 
-Callback arguments:
-+ err: the error, if any
-+ item: the resulting item mapped according to the schema, or null
-+ response: the AWS service response
-
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
 myTable.getItem({ id: 1 }, function (err, item, response) {
@@ -350,10 +325,6 @@ This method is not yet implemented.
 
 + options: attributes to add to the AWS.Request instance (optional)
 + callback: the callback function to invoke with the AWS response
-
-Callback arguments:
-+ err: the error, if any
-+ response: the AWS service response
 
 [AWS Documentation for ListTables](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListTables.html)
 
