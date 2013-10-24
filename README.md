@@ -202,7 +202,7 @@ var myTable = new DynamoDBModel.Model(tableName, schema, {
 
 When creating a model instance, a `describeTable` call is immediately performed to check for table existence. If the table does not exist, a `createTable` call follows immediately.
 
-If the table is not yet active (table status is not `"ACTIVE"`), all operations are queued and will not be executed until the table is ready. When the table becomes active, operations from the queue are executed in sequential order.
+If the table is not yet active (table status is not `"ACTIVE"`), all operations are queued and will not be executed until the table is ready. When the table becomes active, operations from the queue are executed in sequential order. This means that you can create a model instance and start writing data immediately, even if the table does not exist.
 
 If you wish to wait for the table to become available before performing an action, use the `waitForActiveTable` method, which invokes `describeTable` repeatedly until the status switches to `"ACTIVE"`.
 
@@ -211,16 +211,25 @@ If you wish to wait for the table to become available before performing an actio
 #### Model.batchGetItem
 
 This method is not yet implemented.
+
 [AWS Documentation for BatchGetItem](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchGetItem.html)
 
 #### Model.batchWriteItem
 
 This method is not yet implemented.
+
 [AWS Documentation for BatchWriteItem](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html)
 
-#### Model.createTable
+#### Model.createTable(options, callback)
 
 Creates the DynamoDB table represented by the schema and returns the AWS service response.
+
++ options: attributes to add to the AWS.Request instance (optional)
++ callback: the callback function to invoke with the AWS response (optional)
+
+Callback arguments:
++ err: the error, if any
++ response: the AWS service response
 
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
@@ -229,11 +238,21 @@ myTable.createTable(function (err, response) {
 })
 ```
 
+Note: table creation in DynamoDB are asynchronous. The table is not ready until its status property is set to "ACTIVE". If you need to wait for the table to become active, use the `waitForActiveTable` method.
+
 [AWS Documentation for CreateTable](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html)
 
-#### Model.deleteItem
+#### Model.deleteItem(key, options, callback)
 
 Deletes a single item in a table by primary key and returns the AWS service response.
+
++ key: an object representing the primary key of the item to remove
++ options: attributes to add to the AWS.Request instance (optional)
++ callback: the callback function to invoke with the AWS response (optional)
+
+Callback arguments:
++ err: the error, if any
++ response: the AWS service response
 
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
@@ -246,9 +265,16 @@ myTable.deleteItem({ id: 1 }, function (err, response) {
 
 Note: conditional deletes are not yet implemented.
 
-#### Model.deleteTable
+#### Model.deleteTable(options, callback)
 
 Removes the table represented by the schema, as well as all items in the table, then returns the AWS service response.
+
++ options: attributes to add to the AWS.Request instance (optional)
++ callback: the callback function to invoke with the AWS response
+
+Callback arguments:
++ err: the error, if any
++ response: the AWS service response
 
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
@@ -259,9 +285,16 @@ myTable.deleteTable(function (err, response) {
 
 [AWS Documentation for DeleteTable](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DeleteTable.html)
 
-#### Model.describeTable
+#### Model.describeTable(options, callback)
 
 Returns information about the table represented by the schema, including the current status of the table, when it was created, the primary key schema, and any indexes on the table. The table description is the AWS service response.
+
++ options: attributes to add to the AWS.Request instance (optional)
++ callback: the callback function to invoke with the AWS response
+
+Callback arguments:
++ err: the error, if any
++ response: the AWS service response
 
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
@@ -270,13 +303,16 @@ myTable.describeTable(function (err, response) {
 })
 ```
 
-#### Model.waitForActiveTable
+#### Model.waitForActiveTable(pollingInterval, callback)
 
 Invokes `describeTable` repeatedly until the table status is `"ACTIVE"`.
 
-Model.waitForActiveTable(pollingInterval, callback)
-+ pollingInterval: the delay in milliseconds between each invocation of `describeTable` (optional, default: 3000)
-+ callback: the callback function to invoke with the AWS response from `describeTable`
++ pollingInterval: the delay in milliseconds between each invocation of `describeTable` (optional, default value is 3000)
++ callback: the callback function to invoke with the AWS response from `describeTable` (optional)
+
+Callback arguments:
++ err: the error, if any
++ response: the AWS service response
 
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
@@ -286,9 +322,18 @@ myTable.waitForActiveTable(pollingInterval, function (err, response) {
 })
 ```
 
-#### Model.getItem
+#### Model.getItem(key, options, callback)
 
 Retrieves a specific item based on its primary key, returning the mapped item as well as the AWS service response.
+
++ key: an object representing the primary key of the item to retrieve
++ options: attributes to add to the AWS.Request instance (optional)
++ callback: the callback function to invoke with the AWS response
+
+Callback arguments:
++ err: the error, if any
++ item: the resulting item mapped according to the schema, or null
++ response: the AWS service response
 
 ```javascript
 var myTable = new DynamoDBModel.Model(tableName, schema);
@@ -299,34 +344,47 @@ myTable.getItem({ id: 1 }, function (err, item, response) {
 
 [AWS Documentation for GetItem](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_GetItem.html)
 
-#### Model.listTables
+#### Model.listTables(options, callback)
 
 This method is not yet implemented.
+
++ options: attributes to add to the AWS.Request instance (optional)
++ callback: the callback function to invoke with the AWS response
+
+Callback arguments:
++ err: the error, if any
++ response: the AWS service response
+
 [AWS Documentation for ListTables](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListTables.html)
 
-#### Model.putItem
+#### Model.putItem(item, options, callback)
 
 TBD
+
 [AWS Documentation for PutItem](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html)
 
 #### Model.query
 
 TBD
+
 [AWS Documentation for Query](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html)
 
 #### Model.scan
 
 TBD
+
 [AWS Documentation for Scan](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html)
 
 #### Model.updateItem
 
 TBD
+
 [AWS Documentation for UpdateItem](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html)
 
 #### Model.updateTable
 
 TBD
+
 [AWS Documentation for UpdateTable](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateTable.html)
 
 ### Reading results with DynamoDBModel.Query
@@ -348,10 +406,6 @@ This is the initial release of `dynamodb-model` and should not be considered pro
 * Improve API to be closer to Mongoose, using aliases for common methods
 * Check for table key changes, which are unsupported by DynamoDB
 
-## Changelog
-
-* 0.0.1: initial version
-
 ## Compatibility
 
 + Tested with Node 0.10.x
@@ -359,7 +413,8 @@ This is the initial release of `dynamodb-model` and should not be considered pro
 
 ## Dependencies
 
-+ [aws-sdk](https://github.com/aws/aws-sdk-js)
++ [async](http://github.com/caolan/async)
++ [aws-sdk](http://github.com/aws/aws-sdk-js)
 
 ## License
 
