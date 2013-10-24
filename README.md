@@ -7,6 +7,7 @@ A simple and lightweight object mapper for Amazon DynamoDB, influenced by MongoD
 + Support for the full DynamoDB feature set
 + Models use the official AWS SDK module
 + Independent schemas, free of dependencies
++ Automatic table creation
 + Transparent support for MongoDB operators, such as "$gt", "$set" or "$inc"
 + API conventions based on [Mongoose](https://github.com/LearnBoost/mongoose)
 + Good documentation
@@ -37,7 +38,7 @@ var DynamoDBModel = require('dynamodb-model');
 var productSchema = new DynamoDBModel.Schema({
   productId: {
     type: Number,
-    key: true       // indicates a Hash key
+    key: 'hash'     // indicates a Hash key
   },
   sku: String,
   inStock: Boolean, // will be stored as a "Y" or "N" string
@@ -69,14 +70,14 @@ It is also possible to implement you own mapping if necessary:
 var DynamoDBModel = require('dynamodb-model');
 
 var schema = new DynamoDBModel.Schema({
-  /* some fields... */
+  ...
   customField: {
     dynamoDbType: 'S', // the native DynamoDB type, either S, N, B, SS, NS or BS
     mapFromDb: function(value) {
       /* your implementation */
     },
     mapToDb: function(value) {
-      /* your implementation */
+      /* your implementation, must return a string */
     }
   }
 });
@@ -86,7 +87,7 @@ var schema = new DynamoDBModel.Schema({
 
 To specify a Hash or Range key, define a `key` attribute on the field.
 
-* Set to `true` or `"hash"` to specify a **Hash** key
+* Set to `"hash"` to specify a **Hash** key
 * Set to `"range"` to specify a **Range** key
 
 #### Local Secondary Indexes
@@ -121,7 +122,7 @@ var DynamoDBModel = require('dynamodb-model');
 var schema = new DynamoDBModel.Schema({
   id: {
     type: Number,
-    key: true
+    key: 'hash'
   },
   message: String
 });
@@ -137,13 +138,15 @@ schema.mapFromDb({ id: { N: '1' }, message: { 'S': 'some text' } });
 
 The `Model` class provides the high-level API you use to interact with the table, such as reading and writing data. The model class uses the official AWS SDK which already implement most of the best practices, such as automatic retries on a "HTTP 400: Capacity Exceeded" error.
 
+Models also create the table automatically if required. There is no need to validate table existence or the "active" status. Operations performed while the table is not ready are queued until the table becomes active.
+
 ```javascript
 var DynamoDBModel = require('dynamodb-model');
 
 var productSchema = new DynamoDBModel.Schema({
   productId: {
     type: Number,
-    key: true
+    key: 'hash'
   },
   sku: String,
   inStock: Boolean,
@@ -155,6 +158,7 @@ var productSchema = new DynamoDBModel.Schema({
 var productTable = new DynamoDBModel.Model('dynamo-products', productSchema);
 
 // the model provides methods for all DynamoDB operations
+// no need to check for table status, we can start using it right away
 productTable.putItem(/* ... */);
 productTable.getItem(/* ... */);
 productTable.updateItem(/* ... */);
@@ -193,6 +197,16 @@ var myTable = new DynamoDBModel.Model(tableName, schema, {
   sslEnabled: true
 });
 ```
+
+#### About table status
+
+When creating a model instance, a `describeTable` call is immediately performed to check for table existence. If the table does not exist, a `createTable` call follows immediately.
+
+If the table is not yet active (table status is not `"ACTIVE"`), all operations are queued and will not be executed until the table is ready. When the table becomes active, operations from the queue are executed in sequential order.
+
+If you wish to wait for the table to become available before performing an action, use the `waitForActiveTable` method, which invokes `describeTable` repeatedly until the status switches to `"ACTIVE"`.
+
+**WARNING:** the queue is not durable and should not be used in a production environment, since changes will be lost if the application terminates before the table becomes active. Instead, create your table beforehand, or use the `waitForActiveTable` method to make sure the table is ready.
 
 #### Model.batchGetItem
 
@@ -256,7 +270,21 @@ myTable.describeTable(function (err, response) {
 })
 ```
 
-[AWS Documentation for DescribeTable](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTable.html)
+#### Model.waitForActiveTable
+
+Invokes `describeTable` repeatedly until the table status is `"ACTIVE"`.
+
+Model.waitForActiveTable(pollingInterval, callback)
++ pollingInterval: the delay in milliseconds between each invocation of `describeTable` (optional, default: 3000)
++ callback: the callback function to invoke with the AWS response from `describeTable`
+
+```javascript
+var myTable = new DynamoDBModel.Model(tableName, schema);
+var pollingInterval = 5000; // 5 seconds
+myTable.waitForActiveTable(pollingInterval, function (err, response) {
+  // response contains the table description, with an "ACTIVE" status
+})
+```
 
 #### Model.getItem
 
@@ -318,6 +346,7 @@ This is the initial release of `dynamodb-model` and should not be considered pro
 * Add conditional support for `DeleteItem` operation
 * Add parallel support for `Scan` operation
 * Improve API to be closer to Mongoose, using aliases for common methods
+* Check for table key changes, which are unsupported by DynamoDB
 
 ## Changelog
 
