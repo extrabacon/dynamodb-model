@@ -4,15 +4,14 @@ A simple and lightweight object mapper for Amazon DynamoDB, influenced by MongoD
 
 ## Objectives
 
++ Fast and lightweight
++ Ease of use
 + Support for the full DynamoDB feature set
 + Models use the official AWS SDK module
-+ Independent schemas, free of dependencies
-+ Automatic table creation
 + Transparent support for MongoDB operators, such as "$gt", "$set" or "$inc"
 + API conventions based on [Mongoose](https://github.com/LearnBoost/mongoose)
 + Good documentation
 + Good unit test coverage
-+ Fast and lightweight
 
 ## Installation
 
@@ -21,7 +20,6 @@ npm install dynamodb-model
 ```
 
 To run the tests:
-
 ```bash
 npm test
 ```
@@ -87,8 +85,8 @@ var schema = new DynamoDBModel.Schema({
 
 To specify a Hash or Range key, define a `key` attribute on the field.
 
-* Set to `"hash"` to specify a **Hash** key
-* Set to `"range"` to specify a **Range** key
+* Set to "hash" to specify a **Hash** key
+* Set to "range" to specify a **Range** key
 
 #### Local Secondary Indexes
 
@@ -106,6 +104,12 @@ var schema = new DynamoDBModel.Schema({
   active: {
     type: Boolean,
     default: true
+  },
+  created: {
+    type: Date,
+    default: function () {
+      return new Date();
+    }
   }
 });
 ```
@@ -128,7 +132,7 @@ var schema = new DynamoDBModel.Schema({
 });
 
 schema.mapToDb({ id: 1, message: 'some text' });
-// returns { id: { N: '1' }, message: { 'S': 'some text' } };
+// returns { id: { N: '1' }, message: { S: 'some text' } };
 
 schema.mapFromDb({ id: { N: '1' }, message: { 'S': 'some text' } });
 // returns { id: 1, message: 'some text' };
@@ -158,7 +162,6 @@ var productSchema = new DynamoDBModel.Schema({
 var productTable = new DynamoDBModel.Model('dynamo-products', productSchema);
 
 // the model provides methods for all DynamoDB operations
-// no need to check for table status, we can start using it right away
 productTable.putItem(/* ... */);
 productTable.getItem(/* ... */);
 productTable.updateItem(/* ... */);
@@ -169,24 +172,46 @@ var query = productTable.query(/* ... */);
 query.select(/* ... */).limit(100).exec(callback);
 ```
 
+#### Constructor options
+
+The following options can be passed to the `Model` constructor. All other options are forwarded to the `AWS.DynamoDB` constructor.
+
+##### options.throughput
+
+An object for specifying the provisioned throughput for the table. If you rely on automatic table creation, it could be a good idea to specify throughput units.
+
+The default value is:
+```javascript
+{ read: 10, write: 5 }
+```
+
+##### options.consistentRead
+
+The default value to apply for the consistent read setting, for operations that support it. If set to `true`, the operation will use strongly consistent reads. Otherwise, eventually consistent reads are used.
+
+The default value is `false`.
+
+##### options.autoCreateTable
+
+Specifies whether the table should be created automatically when instantiating the model. If set to `true`, the table is created automatically and pending operations are queued. Otherwise, the table must be created manually using `createTable`.
+
+The default value is `true`.
+
 #### About AWS connectivity and credentials
 
 The `dynamodb-model` module uses the official AWS SDK module for low-level operations. To properly connect to your DynamoDB table, make sure you configure the AWS SDK first. More details on the official AWS website [here](http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/configuring.html).
+
+NOTE: the DynamoDB API version supported is "2012-08-10", which is currently the latest version.
 
 ```javascript
 var AWS = require('aws-sdk');
 
 // setup region and credentials
 AWS.config.update({
-    accessKeyId: /* Your acess key */,
+    accessKeyId: /* Your access key */,
     secretAccessKey: /* Your secret key */,
     region: 'us-east-1'
 });
-
-// specify the API version (optional)
-AWS.config.apiVersions = {
-    dynamodb: '2012-08-10'
-};
 ```
 
 Additionally, if you need to specify options for the `AWS.DynamoDB` constructor, pass them to the `Model` constructor like this:
