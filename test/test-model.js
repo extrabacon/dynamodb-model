@@ -17,7 +17,9 @@ describe('DynamoModel', function () {
             key: 'range'
         },
         attribute1: String,
-        attribute2: Number
+        attribute2: Number,
+        attribute3: [Number],
+        attribute4: [String]
     });
 
     // mock the "waitForActiveTable" method
@@ -233,6 +235,20 @@ describe('DynamoModel', function () {
                 expect(function () {
                     model.parseUpdates({ $rename: { attribute1: 'attributeA' } });
                 }).to.throw(/not supported/);
+            });
+            it('should map NS array value to the PUT operator', function () {
+                var updates = model.parseUpdates({ attribute3: ['value']});
+                expect(updates).to.have.property('attribute3');
+                expect(updates.attribute3).to.have.property('Action', 'PUT');
+                expect(updates.attribute3).to.have.property('Value');
+                expect(updates.attribute3.Value).to.have.property('NS').that.is.an('array');
+            });
+            it('should map SS array value to the PUT operator', function () {
+                var updates = model.parseUpdates({ attribute4: ['value']});
+                expect(updates).to.have.property('attribute4');
+                expect(updates.attribute4).to.have.property('Action', 'PUT');
+                expect(updates.attribute4).to.have.property('Value');
+                expect(updates.attribute4.Value).to.have.property('SS').that.is.an('array');
             });
         });
     });
