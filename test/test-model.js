@@ -205,7 +205,15 @@ describe('DynamoModel', function () {
         });
 
         describe('Conditional operators', function () {
-
+            it('should work with IN operator', function () {
+                var model = createTestModel();
+                var updates = model.parseConditions({ attribute1: { '$in': ['value', 'value1'] } });
+                expect(updates).to.have.property('attribute1');
+                expect(updates.attribute1).to.have.property('AttributeValueList');
+                expect(updates.attribute1).to.have.property('ComparisonOperator', 'IN');
+                expect(updates.attribute1).to.have.deep.property('AttributeValueList[0].S', 'value');
+                expect(updates.attribute1).to.have.deep.property('AttributeValueList[1].S', 'value1');
+            });
         });
 
         describe('Update operators', function () {
